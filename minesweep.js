@@ -59,14 +59,13 @@ Board.prototype.clickelement = function (i) {
         var flags = 0;
 
         for (var m = 0; m < siblings.length; m++) {
-            flags += siblings[m].isflagged() ? 1 : 0;
+            flags += this.board[siblings[m]].isflagged() ? 1 : 0;
         }
         //click on all the guys next to it if that is the case
         if (flags == this.board[i].gettotal()) {
             for (var n = 0; n < siblings.length; n++) {
-		var pos = siblings[n].x + siblings[n].y * this.width;
-                if (!this.board[pos].isclicked())
-                    this.clickelement(pos);
+                if (!this.board[siblings[n]].isclicked())
+                    this.clickelement(siblings[n]);
             }
         }
     }
@@ -98,7 +97,7 @@ Board.prototype.siblings = function(k)
     for (var i = -1; i <= 1; i++){
 	for (var j = -1; j <= 1; j++){
 	    if (!(i == 0 && j == 0) && (x + i >= 0 && x + i < this.width) && (y + j >= 0 && y + j < this.height)){
-		siblings[sibcount] = i + j * this.width; //ok back to being 1 dimensional
+		siblings[sibcount] = x + i + (y + j) * this.width; //ok back to being 1 dimensional
 		sibcount++;
 	    }
 	}
