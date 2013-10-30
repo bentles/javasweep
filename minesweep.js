@@ -41,7 +41,7 @@ Board.prototype.clickelement = function (i) {
 
         //check siblings for mines
         for (var k = 0; k < siblings.length; k++)
-            totalmines += siblings[k].check() ? 1 : 0;
+            totalmines += this.board[siblings[k]].check() ? 1 : 0;
 
         //set the totalmines adjacent to the block
         this.board[i].settotal(totalmines);
@@ -49,7 +49,7 @@ Board.prototype.clickelement = function (i) {
         //recurse through clicking the siblings if no mines found
         if (totalmines == 0) {
             for (var l = 0; l < siblings.length; l++) {
-                this.clickelement(siblings[l].x + siblings[l].y * this.width);
+                this.clickelement(siblings[l]);
             }
         }
     }
@@ -64,14 +64,15 @@ Board.prototype.clickelement = function (i) {
         //click on all the guys next to it if that is the case
         if (flags == this.board[i].gettotal()) {
             for (var n = 0; n < siblings.length; n++) {
-                if (!this.board[siblings[n].x + siblings[n].y * this.width]isclicked())
-                    this.clickelement(siblings[n].x, siblings[n].y);
+		var pos = siblings[n].x + siblings[n].y * this.width;
+                if (!this.board[pos].isclicked())
+                    this.clickelement(pos);
             }
         }
     }
 
     //redraw this block
-    draw(x, y);
+    draw(i);
 
     //did they win?
     if (this.mines == this.length - this.clicked)
@@ -85,18 +86,23 @@ Board.prototype.clickelement = function (i) {
     return null;
 };
 
-Board.prototype.siblings = function(i)
+Board.prototype.siblings = function(k)
 {
-       var siblings = new Array();
-	    var sibcount = 0;
-	    for (var i = -1; i <= 1; i++){
-		    for (var j = -1; j <= 1; j++){
-		        if (!(i == 0 && j == 0) && (x + i >= 0 && x + i < this.width) && (y + j >= 0 && y + j < this.height)){
-			        siblings[sibcount] = {x: x + i,y: y + j};
-			        sibcount++;
-		        }
-		    }
+    var siblings = new Array();
+    var sibcount = 0;
+
+    //i have to look at this like a square now
+    var x = k % this.width;
+    var y = Math.floor(k / board.width); 
+
+    for (var i = -1; i <= 1; i++){
+	for (var j = -1; j <= 1; j++){
+	    if (!(i == 0 && j == 0) && (x + i >= 0 && x + i < this.width) && (y + j >= 0 && y + j < this.height)){
+		siblings[sibcount] = i + j * this.width; //ok back to being 1 dimensional
+		sibcount++;
 	    }
+	}
+    }
     return siblings;
 };
 
@@ -115,7 +121,7 @@ Board.prototype.print = function()
 Board.prototype.clickmines = function () {
     for (var i = 0; i < this.length; i++) {
         if (this.board[i].check())
-            this.clickelement(i % board.width, Math.floor(i / board.width));
+            this.clickelement(i);
     }
     this.lost = true;
 };
@@ -219,7 +225,7 @@ function setup(width, height, mines, blocksize) {
         elem.style.height = pixels(size);
         elem.style.display = "block";
         elem.style.float = "left";
-        elem.id = i % board.width + "," + Math.floor(i / board.width);
+        elem.id = i;
         elem.oncontextmenu = rightclick(elem.id);
         elem.onclick = leftclick(elem.id);
         container.appendChild(elem);
@@ -250,16 +256,15 @@ function redraw() {
     //set styles for the grid based on the properties of the blocks
     var child = document.getElementById("container").firstChild;
     while (child != null) {
-        child.style.backgroundSize = pixels(size) + " " + pixels(size);
-        var coords = child.id.split(",");    
-        draw(parseInt(coords[0]), parseInt(coords[1]));  
+        child.style.backgroundSize = pixels(size) + " " + pixels(size);   
+        draw(child.id);  
         child = child.nextSibling;
     }
 }
 
-function draw(x,y) {
-    var identifier = board.doelement(x, y, Cell.prototype.tostring);
-    document.getElementById(x + "," + y).style.backgroundImage = chooseimage(identifier);
+function draw(i) {
+    var identifier = board.board[i].tostring();
+    document.getElementById(i).style.backgroundImage = chooseimage(identifier);
 }
 
 function chooseimage(identifier) {
@@ -296,18 +301,16 @@ function chooseimage(identifier) {
 }
 
 function rightclick(id) {
-    var coords = id.split(",");
     return function () {
-        board.elementnext(parseInt(coords[0]), parseInt(coords[1]));
-        draw(parseInt(coords[0]), parseInt(coords[1]));
+        board.board[parseInt(id)].next();
+        draw(parseInt(id));
         return false;
     };
 }
 
 function leftclick(id) {
-    var coords = id.split(",");
     return function () {
-        var winner = board.clickelement(parseInt(coords[0]), parseInt(coords[1]));
+        var winner = board.clickelement(parseInt(id));
         if (!playing) //start the timer on first click
         {
             timer = window.setInterval(addhundredths, 10);
