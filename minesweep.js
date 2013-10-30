@@ -136,7 +136,7 @@ Board.prototype.countflags = function () {
         flags += board.board[i].isflagged() ? 1 : 0;
     }
     return flags;
-}
+};
 
 //interface to methods of the little dudes
 Board.prototype.doelement = function(x,y,func)
@@ -220,17 +220,10 @@ Cell.prototype.isclicked = function(){
 };
 
 function setup(width, height, mines, blocksize) {
-    var width = width;
-    var height = height;
-    var mines = mines;
     board = new Board(width, height, mines);
     size = blocksize;
 
     var container = document.getElementById("container");
-    //clear the container - not necessary anymore but im leaving this here j.i.c.
-    while (container.firstChild) {
-        container.removeChild(box.firstChild);
-    }
 
     //make it the right size
     container.style.width = pixels(board.width * size);
@@ -248,7 +241,7 @@ function setup(width, height, mines, blocksize) {
         container.appendChild(elem);
     }
 
-    //place the timer and mine counter
+    //place the timer and mine counter - outside of container so it doesnt get treated like a mine
     elem = document.createElement("div");
     elem.id = "data";
     elem.style.width = board.width * size;
@@ -259,6 +252,10 @@ function setup(width, height, mines, blocksize) {
 
     elem2 = document.createElement("div"); 
     elem2.id = "mines";
+    elem.appendChild(elem2);
+
+    elem2 = document.createElement("div");
+    elem2.id = "message";
     elem.appendChild(elem2);
 
     container.parentNode.appendChild(elem);
@@ -277,7 +274,7 @@ function redraw() {
 }
 
 function draw(x,y) {
-    var identifier = board.doelement(x, y, Cell.prototype.tostring)
+    var identifier = board.doelement(x, y, Cell.prototype.tostring);
     document.getElementById(x + "," + y).style.backgroundImage = chooseimage(identifier);
 }
 
@@ -309,11 +306,9 @@ function chooseimage(identifier) {
             return "url(images/flag.png)";
         case "[?]":
             return "url(images/qmark.png)";
+    default:
+	return null;//this should never happen
     }
-}
-
-function pixels(number) {
-    return number.toString() + "px";
 }
 
 function rightclick(id) {
@@ -322,7 +317,7 @@ function rightclick(id) {
         board.elementnext(parseInt(coords[0]), parseInt(coords[1]));
         draw(parseInt(coords[0]), parseInt(coords[1]));
         return false;
-    }
+    };
 }
 
 function leftclick(id) {
@@ -339,7 +334,7 @@ function leftclick(id) {
             window.clearInterval(timer); //stop the timer
             displaywinlose(winner);
         }
-    }
+    };
 }
 
 function addhundredths() {
@@ -362,18 +357,16 @@ function displaywinlose(winner) {
 
     if (winner)
     {
-        message = "YOU WON! Time: " + humantime();
-        document.getElementById("ContentPlaceHolder1_Send1").value = board.width + "x" + board.height + ":" + board.mines;
-        document.getElementById("ContentPlaceHolder1_Send2").value = humantime();
-        __doPostBack('ctl00$ContentPlaceHolder1$SendToDB', '');     
+        message = "YOU WON! Time: " + humantime();    
     }
     else
         message = "TOO BAD :(";
 
-    var a = document.getElementById("container");
-    var msg = document.createElement("div");
+    var msg = document.getElementById("message");
     msg.innerHTML = "<p>" + message + "</p>";
     msg.style.float = "left";
-    a.appendChild(msg);
+}
 
+function pixels(number) {
+    return number.toString() + "px";
 }
