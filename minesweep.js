@@ -70,6 +70,9 @@ Board.prototype.clickelement = function (x, y) {
         }
     }
 
+    //redraw this block
+    draw(x, y);
+
     //did they win?
     if (this.mines == this.length - this.clicked)
         return true;
@@ -77,9 +80,8 @@ Board.prototype.clickelement = function (x, y) {
     //did they lose?
     if (this.lost)
         return false;
-
-    //redraw this block
-    draw(x, y);
+    
+    //did they neither win nore lose?
     return null;
 };
 
@@ -335,7 +337,7 @@ function leftclick(id) {
 
         if (winner || winner == false) {
             window.clearInterval(timer); //stop the timer
-            winner ? alert("YOU WON! Time: " + humantime()) : alert("TOO BAD :(");
+            displaywinlose(winner);
         }
     }
 }
@@ -353,4 +355,25 @@ function humantime() {
     var seconds = Math.floor(time / 100) % 60;
     var hundredths = time % 100;
     return minutes + ":" + seconds + ":" + hundredths;
+}
+
+function displaywinlose(winner) {
+    var message;
+
+    if (winner)
+    {
+        message = "YOU WON! Time: " + humantime();
+        document.getElementById("ContentPlaceHolder1_Send1").value = board.width + "x" + board.height + ":" + board.mines;
+        document.getElementById("ContentPlaceHolder1_Send2").value = humantime();
+        __doPostBack('ctl00$ContentPlaceHolder1$SendToDB', '');     
+    }
+    else
+        message = "TOO BAD :(";
+
+    var a = document.getElementById("container");
+    var msg = document.createElement("div");
+    msg.innerHTML = "<p>" + message + "</p>";
+    msg.style.float = "left";
+    a.appendChild(msg);
+
 }
