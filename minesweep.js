@@ -25,9 +25,9 @@ function Board(width, height, mines) {
     shuffleArray(this.board);
 }
 
-Board.prototype.clickelement = function (x, y) {
-    var check = this.doelement(x, y, Cell.prototype.click);
-    var siblings = this.siblings(x, y);
+Board.prototype.clickelement = function (i) {
+    var check = this.board[i].click();
+    var siblings = this.siblings(i);
 
     if (check == 1) //we have a mine
     {
@@ -37,19 +37,19 @@ Board.prototype.clickelement = function (x, y) {
     else if (check == 0) //we have no mine
     {
         this.clicked++;
-
         var totalmines = 0;
+
         //check siblings for mines
         for (var k = 0; k < siblings.length; k++)
-            totalmines += this.doelement(siblings[k].x, siblings[k].y, Cell.prototype.check) ? 1 : 0;
+            totalmines += siblings[k].check() ? 1 : 0;
 
         //set the totalmines adjacent to the block
-        this.setelementtotal(x, y, totalmines);
+        this.board[i].settotal(totalmines);
 
         //recurse through clicking the siblings if no mines found
         if (totalmines == 0) {
             for (var l = 0; l < siblings.length; l++) {
-                this.clickelement(siblings[l].x, siblings[l].y);
+                this.clickelement(siblings[l].x + siblings[l].y * this.width);
             }
         }
     }
@@ -59,12 +59,12 @@ Board.prototype.clickelement = function (x, y) {
         var flags = 0;
 
         for (var m = 0; m < siblings.length; m++) {
-            flags += this.doelement(siblings[m].x, siblings[m].y, Cell.prototype.isflagged) ? 1 : 0;
+            flags += siblings[m].isflagged() ? 1 : 0;
         }
         //click on all the guys next to it if that is the case
-        if (flags == this.doelement(x, y, Cell.prototype.gettotal)) {
+        if (flags == this.board[i].gettotal()) {
             for (var n = 0; n < siblings.length; n++) {
-                if (!this.doelement(siblings[n].x, siblings[n].y, Cell.prototype.isclicked))
+                if (!this.board[siblings[n].x + siblings[n].y * this.width]isclicked())
                     this.clickelement(siblings[n].x, siblings[n].y);
             }
         }
@@ -85,29 +85,19 @@ Board.prototype.clickelement = function (x, y) {
     return null;
 };
 
-Board.prototype.siblings = function(x,y)
+Board.prototype.siblings = function(i)
 {
        var siblings = new Array();
 	    var sibcount = 0;
 	    for (var i = -1; i <= 1; i++){
 		    for (var j = -1; j <= 1; j++){
-		        if (!(i == 0 && j == 0) && (x + i >= 0 && x + i < this.width) && 	(y + j >= 0 && y + j < this.height)){
+		        if (!(i == 0 && j == 0) && (x + i >= 0 && x + i < this.width) && (y + j >= 0 && y + j < this.height)){
 			        siblings[sibcount] = {x: x + i,y: y + j};
 			        sibcount++;
 		        }
 		    }
 	    }
     return siblings;
-};
-
-Board.prototype.setelementtotal = function(x,y, total)
-{
-    this.board[x + y*this.width].settotal(total);
-};
-
-Board.prototype.elementnext = function(x, y)
-{
-    this.doelement(x,y, Cell.prototype.next);
 };
 
 Board.prototype.print = function()
@@ -138,12 +128,6 @@ Board.prototype.countflags = function () {
     return flags;
 };
 
-//interface to methods of the little dudes
-Board.prototype.doelement = function(x,y,func)
-{
-    var cell = x + y * this.width;
-    return func.call(this.board[cell]);
-};
 
 /**
  * Randomize array element order in-place.
